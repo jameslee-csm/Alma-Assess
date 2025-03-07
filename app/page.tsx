@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import StyledButton from "./components/StyledButton";
 
 export default function Home() {
   redirect("/assessment");

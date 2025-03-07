@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Container, Icon, Message, BackButton } from "./styles";
+import { Container, Message, BackButton } from "./styles";
 import Image from "next/image";
 import Notice from "../assets/notice.png";
 

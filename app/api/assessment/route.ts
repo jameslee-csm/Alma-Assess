@@ -20,7 +20,7 @@ export interface FormData {
 }
 
 // In-memory storage for form submissions
-let submissions: FormData[] = [
+const submissions: FormData[] = [
   {
     id: "1",
     firstName: "Jorge",

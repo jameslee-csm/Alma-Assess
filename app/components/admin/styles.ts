@@ -1,6 +1,6 @@
 "use client";
 
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { FiChevronDown } from "react-icons/fi";
 
 export const LogoContainer = styled.div<{ $isOpen?: boolean }>`

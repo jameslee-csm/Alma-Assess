@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Container,
@@ -28,7 +27,6 @@ import { ValidationError } from "next/dist/compiled/amphtml-validator";
 
 export default function AssessmentForm() {
   const countries = allCountries.map((country) => country.name.common).sort();
-  const router = useRouter();
 
   // Define initial form state
   const initialFormData = {
@@ -128,6 +126,7 @@ export default function AssessmentForm() {
         message:
           "Connection error. Please check your internet connection and try again.",
       });
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -272,7 +271,7 @@ export default function AssessmentForm() {
                     checked={formData.visaCategories["unknown"]}
                     onChange={handleChange}
                   />{" "}
-                  I don't know
+                  I don&apos;t know
                 </RadioLabel>
               </RadioGroup>
             </FormSection>

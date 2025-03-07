@@ -51,7 +51,8 @@ export default function Login() {
         } else {
           setError("Invalid credentials");
         }
-      } catch (err) {
+      } catch (error) {
+        console.log(error);
         setError("Invalid username or password");
       }
     }
