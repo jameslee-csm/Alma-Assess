@@ -16,6 +16,10 @@ export const Header = styled.header`
   color: white;
   overflow: hidden;
   padding: 2rem 20rem;
+
+  @media (max-width: 768px) {
+    padding: 2rem;
+  }
 `;
 
 export const Logo = styled.div`

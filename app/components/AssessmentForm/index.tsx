@@ -24,12 +24,14 @@ import Logo from "../assets/logo.png";
 import Notice from "../assets/notice.png";
 import Dice from "../assets/dice.png";
 import Heart from "../assets/heart.png";
+import { ValidationError } from "next/dist/compiled/amphtml-validator";
 
 export default function AssessmentForm() {
   const countries = allCountries.map((country) => country.name.common).sort();
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  // Define initial form state
+  const initialFormData = {
     firstName: "",
     lastName: "",
     email: "",
@@ -42,13 +44,19 @@ export default function AssessmentForm() {
       unknown: false,
     },
     helpText: "",
-  });
+  };
 
+  const [formData, setFormData] = useState(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     success?: boolean;
     message?: string;
   }>({});
+
+  // Add resetForm function
+  const resetForm = () => {
+    setFormData(initialFormData);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -77,7 +85,7 @@ export default function AssessmentForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSubmitStatus({});
+    setSubmitStatus({ success: false, message: "" });
 
     try {
       const response = await fetch("/api/assessment", {
@@ -90,19 +98,35 @@ export default function AssessmentForm() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        router.push("/assessment/thank-you");
+      if (!response.ok) {
+        if (data.errors) {
+          // Handle structured validation errors
+          const errorMessage = data.errors
+            .map((err: ValidationError) => `${err.field}: ${err.message}`)
+            .join("\n");
+          setSubmitStatus({
+            success: false,
+            message: `Please correct the following errors:\n${errorMessage}`,
+          });
+        } else {
+          setSubmitStatus({
+            success: false,
+            message: data.error || "Something went wrong. Please try again.",
+          });
+        }
       } else {
         setSubmitStatus({
-          success: false,
-          message: data.error || "Failed to submit the form. Please try again.",
+          success: true,
+          message: "Your assessment request has been submitted successfully!",
         });
+        // Reset form after successful submission
+        resetForm();
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
       setSubmitStatus({
         success: false,
-        message: "An unexpected error occurred. Please try again later.",
+        message:
+          "Connection error. Please check your internet connection and try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -192,6 +216,7 @@ export default function AssessmentForm() {
               value={formData.website}
               onChange={handleChange}
               placeholder="LinkedIn / Personal Website URL"
+              required
             />
 
             <FormSection>

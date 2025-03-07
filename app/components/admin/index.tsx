@@ -6,6 +6,8 @@ import {
   FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
+  FiMenu,
+  FiX,
 } from "react-icons/fi";
 import {
   Container,
@@ -26,13 +28,17 @@ import {
   AdminFooter,
   AdminIcon,
   SortIcon,
+  LogoContainer,
+  MobileMenuButton,
+  ResponsiveTableWrapper,
 } from "./styles";
 import { FormData } from "@/app/api/assessment/route";
+import ProtectedRoute from "../ProtectedRoute";
 import Logo from "../assets/logo.png";
 
 const AdminDashboard: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState(1);
   const [leads, setLeads] = useState<FormData[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -43,95 +49,105 @@ const AdminDashboard: React.FC = () => {
     fetchLeads();
   }, []);
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <Container>
-      <Sidebar>
-        <div
-          style={{
-            display: "flex",
-            width: "100%",
-            margin: "20px 0px",
-          }}
-        >
-          <Image src={Logo} alt="logo" />
-        </div>
+    <ProtectedRoute>
+      <Container>
+        <MobileMenuButton onClick={toggleSidebar}>
+          {sidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </MobileMenuButton>
 
-        <SidebarItem>Leads</SidebarItem>
-        <SidebarItem>Settings</SidebarItem>
+        <LogoContainer $isOpen={sidebarOpen}>
+          <Sidebar $isOpen={sidebarOpen}>
+            <Image src={Logo} alt="logo" style={{ marginBottom: "30px" }} />
 
-        <AdminFooter>
-          <AdminIcon>A</AdminIcon>
-          <span>Admin</span>
-        </AdminFooter>
-      </Sidebar>
+            <SidebarItem $active={true}>Leads</SidebarItem>
+            <SidebarItem>Settings</SidebarItem>
 
-      <MainContent>
-        <Header>Leads</Header>
+            <AdminFooter>
+              <AdminIcon>A</AdminIcon>
+              <span>Admin</span>
+            </AdminFooter>
+          </Sidebar>
+        </LogoContainer>
 
-        <SearchContainer>
-          <SearchBar>
-            <FiSearch />
-            <input type="text" placeholder="Search" />
-          </SearchBar>
+        <MainContent>
+          <Header>Leads</Header>
 
-          <StatusFilter>
-            <select>
-              <option>Status</option>
-              <option>Pending</option>
-              <option>Reached Out</option>
-            </select>
-            <FiChevronDown />
-          </StatusFilter>
-        </SearchContainer>
+          <SearchContainer>
+            <SearchBar>
+              <FiSearch />
+              <input type="text" placeholder="Search" />
+            </SearchBar>
 
-        <TableContainer>
-          <Table>
-            <thead>
-              <tr>
-                <TableHeader>
-                  First Name <SortIcon />
-                </TableHeader>
-                <TableHeader>
-                  Last Name <SortIcon />
-                </TableHeader>
-                <TableHeader>
-                  Email <SortIcon />
-                </TableHeader>
-                <TableHeader>
-                  Status <SortIcon />
-                </TableHeader>
-                <TableHeader>
-                  Country <SortIcon />
-                </TableHeader>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead, index) => (
-                <TableRow key={index}>
-                  <TableCell>{lead.firstName}</TableCell>
-                  <TableCell>{lead.lastName}</TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.status}</TableCell>
-                  <TableCell>{lead.country}</TableCell>
-                </TableRow>
-              ))}
-            </tbody>
-          </Table>
-        </TableContainer>
+            <StatusFilter>
+              <select>
+                <option>Status</option>
+                <option>Pending</option>
+                <option>Reached Out</option>
+              </select>
+              <FiChevronDown />
+            </StatusFilter>
+          </SearchContainer>
 
-        <Pagination>
-          <PaginationButton>
-            <FiChevronLeft size={16} />
-          </PaginationButton>
-          <PaginationButton $isActivate>1</PaginationButton>
-          <PaginationButton>2</PaginationButton>
-          <PaginationButton>3</PaginationButton>
-          <PaginationButton>
-            <FiChevronRight size={16} />
-          </PaginationButton>
-        </Pagination>
-      </MainContent>
-    </Container>
+          <TableContainer>
+            <ResponsiveTableWrapper>
+              <Table>
+                <thead>
+                  <tr>
+                    <TableHeader>
+                      First Name <SortIcon />
+                    </TableHeader>
+                    <TableHeader>
+                      Last Name <SortIcon />
+                    </TableHeader>
+                    <TableHeader>
+                      Email <SortIcon />
+                    </TableHeader>
+                    <TableHeader>
+                      Status <SortIcon />
+                    </TableHeader>
+                    <TableHeader>
+                      Country <SortIcon />
+                    </TableHeader>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map((lead, index) => (
+                    <TableRow key={index}>
+                      <TableCell data-label="First Name">
+                        {lead.firstName}
+                      </TableCell>
+                      <TableCell data-label="Last Name">
+                        {lead.lastName}
+                      </TableCell>
+                      <TableCell data-label="Email">{lead.email}</TableCell>
+                      <TableCell data-label="Status">{lead.status}</TableCell>
+                      <TableCell data-label="Country">{lead.country}</TableCell>
+                    </TableRow>
+                  ))}
+                </tbody>
+              </Table>
+            </ResponsiveTableWrapper>
+          </TableContainer>
+
+          <Pagination>
+            <PaginationButton>
+              <FiChevronLeft size={16} />
+            </PaginationButton>
+            <PaginationButton $isActivate>1</PaginationButton>
+            <PaginationButton>2</PaginationButton>
+            <PaginationButton>3</PaginationButton>
+            <PaginationButton>
+              <FiChevronRight size={16} />
+            </PaginationButton>
+          </Pagination>
+        </MainContent>
+      </Container>
+    </ProtectedRoute>
   );
 };
 

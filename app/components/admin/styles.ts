@@ -1,16 +1,54 @@
-import styled from "styled-components";
+"use client";
+
+import styled, { css } from "styled-components";
 import { FiChevronDown } from "react-icons/fi";
+
+export const LogoContainer = styled.div<{ $isOpen?: boolean }>`
+  display: flex;
+  padding: 15px;
+  background: linear-gradient(
+    135deg,
+    #fffae0 0%,
+    #ffffff 50%,
+    rgba(255, 252, 222, 0) 100%
+  );
+  border-radius: 0 0 30px 0;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    z-index: 100;
+    transform: ${({ $isOpen }) =>
+      $isOpen ? "translateX(0)" : "translateX(-100%)"};
+    transition: transform 0.3s ease;
+  }
+`;
 
 export const Container = styled.div`
   display: flex;
   height: 100vh;
+  position: relative;
   font-family: "Inter", sans-serif;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
-export const Sidebar = styled.div`
+export const Sidebar = styled.div<{ $isOpen?: boolean }>`
   width: 250px;
-  background-color: #fffae0;
+  background-color: #ffffff;
   padding: 2rem 1.5rem;
+  background: transparent;
+  border-right: 1px solid #e2e8f0;
+  height: 100%;
+
+  @media (max-width: 768px) {
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    display: ${({ $isOpen }) => ($isOpen ? "block" : "none")};
+  }
 `;
 
 export const Logo = styled.div`
@@ -19,16 +57,22 @@ export const Logo = styled.div`
   margin-bottom: 3rem;
 `;
 
-export const SidebarItem = styled.div`
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  cursor: pointer;
+export const SidebarItem = styled.div<{ $active?: boolean }>`
+  font-weight: ${(props) => (props.$active ? "700" : "400")};
+  padding: 10px 0px;
 `;
 
 export const MainContent = styled.div`
   flex: 1;
   padding: 2rem;
   background-color: white;
+  overflow-y: auto;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 15px;
+    margin-top: 50px;
+  }
 `;
 
 export const Header = styled.h1`
@@ -41,6 +85,11 @@ export const SearchContainer = styled.div`
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+  }
 `;
 
 export const SearchBar = styled.div`
@@ -90,11 +139,25 @@ export const TableContainer = styled.div`
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 export const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+
+  @media (max-width: 576px) {
+    display: block;
+
+    thead {
+      display: none;
+    }
+
+    tbody {
+      display: block;
+    }
+  }
 `;
 
 export const TableHeader = styled.th`
@@ -116,11 +179,31 @@ export const TableRow = styled.tr`
   &:not(:last-child) {
     border-bottom: 1px solid #e2e8f0;
   }
+
+  @media (max-width: 576px) {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 2px solid #e2e8f0;
+  }
 `;
 
 export const TableCell = styled.td`
   padding: 1rem;
   color: #2d3748;
+
+  @media (max-width: 576px) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:before {
+      content: attr(data-label);
+      font-weight: 600;
+      width: 40%;
+    }
+  }
 `;
 
 export const Pagination = styled.div`
@@ -169,4 +252,40 @@ export const AdminFooter = styled.div`
   position: absolute;
   bottom: 2rem;
   left: 2rem;
+`;
+
+export const ResponsiveTableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+
+  @media (max-width: 768px) {
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 4px;
+    }
+  }
+`;
+
+export const MobileMenuButton = styled.button`
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 101;
+  background: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;

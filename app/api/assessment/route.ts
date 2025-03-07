@@ -59,28 +59,110 @@ let submissions: FormData[] = [
   },
 ];
 
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+// Email regex pattern
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+// URL regex pattern (basic validation)
+const URL_REGEX = /^(https?:\/\/)?([\w\d-]+\.)+[\w-]+(\/[\w\d-./?=%&]*)?$/;
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.json();
+    const errors: ValidationError[] = [];
 
-    // Validate required fields
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.email ||
-      !formData.country
-    ) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    // Validate required fields with detailed error messages
+    if (!formData.firstName || formData.firstName.trim() === "") {
+      errors.push({ field: "firstName", message: "First name is required" });
+    } else if (formData.firstName.length < 2) {
+      errors.push({
+        field: "firstName",
+        message: "First name must be at least 2 characters",
+      });
+    } else if (formData.firstName.length > 50) {
+      errors.push({
+        field: "firstName",
+        message: "First name must not exceed 50 characters",
+      });
     }
 
+    if (!formData.lastName || formData.lastName.trim() === "") {
+      errors.push({ field: "lastName", message: "Last name is required" });
+    } else if (formData.lastName.length < 2) {
+      errors.push({
+        field: "lastName",
+        message: "Last name must be at least 2 characters",
+      });
+    } else if (formData.lastName.length > 50) {
+      errors.push({
+        field: "lastName",
+        message: "Last name must not exceed 50 characters",
+      });
+    }
+
+    if (!formData.email || formData.email.trim() === "") {
+      errors.push({ field: "email", message: "Email is required" });
+    } else if (!EMAIL_REGEX.test(formData.email)) {
+      errors.push({
+        field: "email",
+        message: "Please enter a valid email address",
+      });
+    }
+
+    if (!formData.country || formData.country.trim() === "") {
+      errors.push({
+        field: "country",
+        message: "Country of citizenship is required",
+      });
+    }
+
+    if (!formData.website || formData.website.trim() === "") {
+      errors.push({ field: "website", message: "Website is required" });
+    } else if (!URL_REGEX.test(formData.website)) {
+      errors.push({ field: "website", message: "Please enter a valid URL" });
+    }
+
+    // Validate optional fields if provided
+    if (formData.website && !URL_REGEX.test(formData.website)) {
+      errors.push({ field: "website", message: "Please enter a valid URL" });
+    }
+
+    // Validate at least one visa category is selected if they didn't select "unknown"
+    if (formData.visaCategories) {
+      const hasSelectedCategory = Object.values(formData.visaCategories).some(
+        (value) => value === true
+      );
+      if (!hasSelectedCategory) {
+        errors.push({
+          field: "visaCategories",
+          message:
+            'Please select at least one visa category or "I don\'t know"',
+        });
+      }
+    }
+
+    // Check help text length if provided
+    if (formData.helpText && formData.helpText.length > 1000) {
+      errors.push({
+        field: "helpText",
+        message: "Help text must not exceed 1000 characters",
+      });
+    }
+
+    // Return validation errors if any
+    if (errors.length > 0) {
+      return NextResponse.json({ success: false, errors }, { status: 400 });
+    }
+
+    // Process valid submission
     // Create new record with generated ID
-    const newSubmission: FormData = {
+    const newSubmission = {
       id: submissions.length,
       ...formData,
-      status: "Pending", // default value is Pending
+      status: "Pending",
       submittedAt: new Date().toISOString(),
     };
 
