@@ -32,12 +32,12 @@ import {
   MobileMenuButton,
   ResponsiveTableWrapper,
 } from "./styles";
-import { FormData } from "@/app/api/assessment/route";
-import ProtectedRoute from "../ProtectedRoute";
+import ProtectedRoute from "@/app/components/ProtectedRoute";
+import {ISubmission} from "@/app/api/assessment/route"
 import Logo from "../assets/logo.png";
 
 const AdminDashboard: React.FC = () => {
-  const [leads, setLeads] = useState<FormData[]>([]);
+  const [leads, setLeads] = useState<ISubmission[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
