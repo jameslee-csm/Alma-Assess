@@ -127,3 +127,32 @@ export const Checkbox = styled.input`
     accent-color: #your-theme-color;
   }
 `;
+
+export const FileUploadContainer = styled.div`
+  margin-bottom: 20px;
+  width: 100%;
+`;
+
+export const FileLabel = styled.label`
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+
+  .file-name {
+    font-style: italic;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+`;
+
+export const FileInput = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;

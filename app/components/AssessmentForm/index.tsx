@@ -16,6 +16,9 @@ import {
   RadioGroup,
   RadioLabel,
   Checkbox,
+  FileUploadContainer,
+  FileInput,
+  FileLabel,
 } from "./styles";
 import allCountries from "world-countries/countries.json";
 import HeaderBackground from "../assets/HeaderBackground.png";
@@ -42,6 +45,7 @@ export default function AssessmentForm() {
       unknown: false,
     },
     helpText: "",
+    resume: null as File | null,
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -50,6 +54,7 @@ export default function AssessmentForm() {
     success?: boolean;
     message?: string;
   }>({});
+  const [resumeFileName, setResumeFileName] = useState<string>("");
 
   // Add resetForm function
   const resetForm = () => {
@@ -72,6 +77,17 @@ export default function AssessmentForm() {
           [value]: checkbox.checked,
         },
       }));
+    } else if (type === "file") {
+      // Handle file input
+      const fileInput = e.target as HTMLInputElement;
+      if (fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        setFormData((prev) => ({
+          ...prev,
+          resume: file,
+        }));
+        setResumeFileName(file.name);
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -86,12 +102,30 @@ export default function AssessmentForm() {
     setSubmitStatus({ success: false, message: "" });
 
     try {
+      // Create FormData object for file upload
+      const formDataToSend = new FormData();
+
+      // Add all text fields
+      formDataToSend.append("firstName", formData.firstName);
+      formDataToSend.append("lastName", formData.lastName);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("country", formData.country);
+      formDataToSend.append("website", formData.website);
+      formDataToSend.append("helpText", formData.helpText);
+
+      // Add visa categories
+      Object.entries(formData.visaCategories).forEach(([key, value]) => {
+        formDataToSend.append(`visaCategories[${key}]`, String(value));
+      });
+
+      // Add resume file if it exists
+      if (formData.resume) {
+        formDataToSend.append("resume", formData.resume);
+      }
+
       const response = await fetch("/api/assessment", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend, // Send FormData instead of JSON
       });
 
       const data = await response.json();
@@ -217,6 +251,22 @@ export default function AssessmentForm() {
               placeholder="LinkedIn / Personal Website URL"
               required
             />
+
+            <FileUploadContainer>
+              <FileLabel htmlFor="resume">
+                Upload your resume (PDF, DOC, or DOCX)
+                {resumeFileName && (
+                  <span className="file-name"> - {resumeFileName}</span>
+                )}
+              </FileLabel>
+              <FileInput
+                type="file"
+                id="resume"
+                name="resume"
+                accept=".pdf,.doc,.docx"
+                onChange={handleChange}
+              />
+            </FileUploadContainer>
 
             <FormSection>
               <div

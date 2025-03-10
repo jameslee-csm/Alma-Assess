@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Mock database - in a real app, you'd use a proper database
-export interface FormData {
+type SubmissionStatus = "Pending" | "Reached Out";
+
+export interface ISubmission {
   id: string;
   firstName: string;
   lastName: string;
@@ -16,11 +17,16 @@ export interface FormData {
   };
   helpText?: string;
   submittedAt?: string;
-  status?: "Pending" | "Reached Out";
+  status?: SubmissionStatus;
+  resume?: {
+    name: string;
+    type: string;
+    size: number;
+  };
 }
 
 // In-memory storage for form submissions
-const submissions: FormData[] = [
+const submissions: ISubmission[] = [
   {
     id: "1",
     firstName: "Jorge",
@@ -71,85 +77,126 @@ const URL_REGEX = /^(https?:\/\/)?([\w\d-]+\.)+[\w-]+(\/[\w\d-./?=%&]*)?$/;
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.json();
+    // Parse FormData instead of JSON
+    const formData = await request.formData();
     const errors: ValidationError[] = [];
 
+    // Extract form fields
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const email = formData.get("email") as string;
+    const country = formData.get("country") as string;
+    const website = formData.get("website") as string;
+    const helpText = formData.get("helpText") as string;
+    const resumeFile = formData.get("resume") as File | null;
+
+    // Parse visa categories from FormData
+    const visaCategories = {
+      "O-1": formData.get("visaCategories[O-1]") === "true",
+      "EB-1A": formData.get("visaCategories[EB-1A]") === "true",
+      "EB-2-NIW": formData.get("visaCategories[EB-2-NIW]") === "true",
+      unknown: formData.get("visaCategories[unknown]") === "true",
+    };
+
     // Validate required fields with detailed error messages
-    if (!formData.firstName || formData.firstName.trim() === "") {
+    if (!firstName || firstName.trim() === "") {
       errors.push({ field: "firstName", message: "First name is required" });
-    } else if (formData.firstName.length < 2) {
+    } else if (firstName.length < 2) {
       errors.push({
         field: "firstName",
         message: "First name must be at least 2 characters",
       });
-    } else if (formData.firstName.length > 50) {
+    } else if (firstName.length > 50) {
       errors.push({
         field: "firstName",
         message: "First name must not exceed 50 characters",
       });
     }
 
-    if (!formData.lastName || formData.lastName.trim() === "") {
+    if (!lastName || lastName.trim() === "") {
       errors.push({ field: "lastName", message: "Last name is required" });
-    } else if (formData.lastName.length < 2) {
+    } else if (lastName.length < 2) {
       errors.push({
         field: "lastName",
         message: "Last name must be at least 2 characters",
       });
-    } else if (formData.lastName.length > 50) {
+    } else if (lastName.length > 50) {
       errors.push({
         field: "lastName",
         message: "Last name must not exceed 50 characters",
       });
     }
 
-    if (!formData.email || formData.email.trim() === "") {
+    if (!email || email.trim() === "") {
       errors.push({ field: "email", message: "Email is required" });
-    } else if (!EMAIL_REGEX.test(formData.email)) {
+    } else if (!EMAIL_REGEX.test(email)) {
       errors.push({
         field: "email",
         message: "Please enter a valid email address",
       });
     }
 
-    if (!formData.country || formData.country.trim() === "") {
+    if (!country || country.trim() === "") {
       errors.push({
         field: "country",
         message: "Country of citizenship is required",
       });
     }
 
-    if (!formData.website || formData.website.trim() === "") {
+    if (!website || website.trim() === "") {
       errors.push({ field: "website", message: "Website is required" });
-    } else if (!URL_REGEX.test(formData.website)) {
+    } else if (!URL_REGEX.test(website)) {
       errors.push({ field: "website", message: "Please enter a valid URL" });
     }
 
     // Validate optional fields if provided
-    if (formData.website && !URL_REGEX.test(formData.website)) {
+    if (website && !URL_REGEX.test(website)) {
       errors.push({ field: "website", message: "Please enter a valid URL" });
     }
 
     // Validate at least one visa category is selected if they didn't select "unknown"
-    if (formData.visaCategories) {
-      const hasSelectedCategory = Object.values(formData.visaCategories).some(
-        (value) => value === true
-      );
-      if (!hasSelectedCategory) {
-        errors.push({
-          field: "visaCategories",
-          message:
-            'Please select at least one visa category or "I don\'t know"',
-        });
-      }
+    const hasSelectedCategory = Object.values(visaCategories).some(
+      (value) => value === true
+    );
+    if (!hasSelectedCategory) {
+      errors.push({
+        field: "visaCategories",
+        message: 'Please select at least one visa category or "I don\'t know"',
+      });
     }
 
     // Check help text length if provided
-    if (formData.helpText && formData.helpText.length > 1000) {
+    if (helpText && helpText.length > 1000) {
       errors.push({
         field: "helpText",
         message: "Help text must not exceed 1000 characters",
       });
+    }
+
+    // Validate resume file if provided
+    if (resumeFile) {
+      const validFileTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+
+      // Check file type
+      if (!validFileTypes.includes(resumeFile.type)) {
+        errors.push({
+          field: "resume",
+          message: "Resume must be a PDF, DOC, or DOCX file",
+        });
+      }
+
+      // Check file size (limit to 5MB)
+      const fileSizeInMB = resumeFile.size / (1024 * 1024);
+      if (fileSizeInMB > 5) {
+        errors.push({
+          field: "resume",
+          message: "Resume file size must not exceed 5MB",
+        });
+      }
     }
 
     // Return validation errors if any
@@ -158,11 +205,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Process valid submission
+    // In a real application, you would save the file to storage (S3, etc.)
+    // For this example, we'll just store file metadata
+    let resumeData;
+    if (resumeFile) {
+      resumeData = {
+        name: resumeFile.name,
+        type: resumeFile.type,
+        size: resumeFile.size,
+        // In a real app, you would upload the file to storage and store the URL
+        // url: 'https://your-storage-bucket.com/path/to/file'
+      };
+
+      // Example of how you might read the file content if needed
+      // const fileContent = await resumeFile.arrayBuffer();
+      // Then upload this content to your storage solution
+    }
+
     // Create new record with generated ID
     const newSubmission = {
-      id: submissions.length,
-      ...formData,
-      status: "Pending",
+      id: String(submissions.length),
+      firstName,
+      lastName,
+      email,
+      country,
+      website,
+      visaCategories,
+      helpText,
+      resume: resumeData,
+      status: "Pending" as SubmissionStatus,
       submittedAt: new Date().toISOString(),
     };
 
